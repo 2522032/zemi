@@ -47,6 +47,36 @@ try {
             photo_path TEXT
         );
     ");
+    $pdo->exec("
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id SERIAL PRIMARY KEY,
+      group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+      user_id  INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+      message  TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    ");
+
+    $pdo->exec("
+        CREATE INDEX IF NOT EXISTS idx_chat_group_time
+        ON chat_messages(group_id, created_at DESC);
+    ");
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS group_events (
+        id SERIAL PRIMARY KEY,
+        group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        start_at TIMESTAMP NOT NULL,
+        end_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_group_events_group_start
+        ON group_events(group_id, start_at);
+    ");
 
     $pdo->commit();
     echo "OK: テーブル作成完了";

@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   $_SESSION['username'] = $user['username'];
                   unset($_SESSION['group_id']);   // ★リセット
   
-                  header('Location: home.php');
+                  header('Location: group_select.php');
                   exit;
             }
         } catch (PDOException $e) {

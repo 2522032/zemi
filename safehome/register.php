@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
 
                 $stmt = $pdo->prepare(
-                    "INSERT INTO users (username, password) VALUES (:u, :p) RETURNING id"
+                    "INSERT INTO users (username, password_hash) VALUES (:u, :p) RETURNING id"
                 );
                 $stmt->execute([':u' => $username, ':p' => $hash]);
 

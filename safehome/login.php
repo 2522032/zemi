@@ -16,7 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $stmt = $pdo->prepare(
-                "SELECT id, username, password FROM users WHERE username = :u"
+                "SELECT id, username, password_hash AS password FROM users WHERE username = :u"
+
             );
             $stmt->execute([':u' => $username]);
             $user = $stmt->fetch();

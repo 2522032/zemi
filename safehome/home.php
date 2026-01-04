@@ -163,6 +163,7 @@ $members = $stmt->fetchAll();
         </div>
       </div>
 
+<<<<<<< HEAD
       <div class="col-12 col-lg-6">
         <div class="p-3 rounded-4 bg-white bg-opacity-50 border" style="border-color: rgba(255,255,255,.7) !important;">
           <div class="d-flex justify-content-between align-items-center mb-3">
@@ -181,6 +182,41 @@ $members = $stmt->fetchAll();
               </div>
             </div>
           <?php endforeach; ?>
+=======
+<?php
+    $members = [];
+    if (isset($_SESSION['group_id'])) {
+        $stmt = $pdo->prepare("
+            SELECT u.username
+            FROM users u
+            JOIN group_members gm ON u.id = gm.user_id
+            WHERE gm.group_id = :gid
+            ORDER BY u.username ASC
+        ");
+        $stmt->execute([':gid' => $_SESSION['group_id']]);
+        $members = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+?>
+<?php if ($members): ?>
+  <h4>グループメンバー</h4>
+  <ul>
+    <?php foreach ($members as $m): ?>
+      <li><?php echo htmlspecialchars($m, ENT_QUOTES, 'UTF-8'); ?></li>
+    <?php endforeach; ?>
+  </ul>
+<?php endif; ?>
+<hr>
+
+<ul>
+  
+  <li><a href="insert.php">安全チェック入力</a></li>
+  <li><a href="history.php">履歴を見る</a></li>
+  <li><a href="group_select.php">グループ選択</a></li>
+  <li><a href="chat.php">グループチャット</a></li>
+  <li><a href="calendar.php">カレンダー（予定共有）</a></li>
+
+
+>>>>>>> origin/main
 
         </div>
       </div>

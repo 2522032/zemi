@@ -16,7 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $stmt = $pdo->prepare(
+<<<<<<< HEAD
                 "SELECT id, username, password_hash FROM users WHERE username = :u"
+=======
+                "SELECT id, username, password_hash AS password FROM users WHERE username = :u"
+
+>>>>>>> origin/main
             );
             $stmt->execute([':u' => $username]);
             $user = $stmt->fetch();
@@ -30,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   $_SESSION['username'] = $user['username'];
                   unset($_SESSION['group_id']);   // ★リセット
   
-                  header('Location: home.php');
+                  header('Location: group_select.php');
                   exit;
             }
         } catch (PDOException $e) {

@@ -16,13 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $stmt = $pdo->prepare(
+<<<<<<< HEAD
+                "SELECT id, username, password_hash FROM users WHERE username = :u"
+=======
                 "SELECT id, username, password_hash AS password FROM users WHERE username = :u"
 
+>>>>>>> origin/main
             );
             $stmt->execute([':u' => $username]);
             $user = $stmt->fetch();
 
-            if (!$user || !password_verify($password, $user['password'])) {
+            if (!password_verify($password, $user['password_hash'])) {
                 $error = 'ユーザー名またはパスワードが違います';
             } else {
                 session_regenerate_id(true);
@@ -45,33 +49,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ja">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ログイン</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body { background: #f6f7fb; }
+    .app-card { max-width: 520px; }
+    .brand { font-weight: 700; letter-spacing: .02em; }
+    .muted { color: #6c757d; font-size: .95rem; }
+  </style>
 </head>
 <body>
 
-<h1>ログイン</h1>
+<nav class="navbar bg-white border-bottom">
+  <div class="container">
+    <span class="navbar-brand brand">SafeHome</span>
+  </div>
+</nav>
 
-<?php if ($error): ?>
-  <p style="color:red;">
-    <?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?>
-  </p>
-<?php endif; ?>
+<main class="container py-5">
+  <div class="mx-auto app-card">
+    <div class="card shadow-sm border-0 rounded-4">
+      <div class="card-body p-4 p-md-5">
 
-<form method="post">
-  <p>
-    <label>ユーザー名</label><br>
-    <input type="text" name="username" required>
-  </p>
+        <h1 class="h4 mb-1">ログイン</h1>
+        <p class="muted mb-4">ユーザー名とパスワードを入力してください。</p>
 
-  <p>
-    <label>パスワード</label><br>
-    <input type="password" name="password" required>
-  </p>
+        <?php if ($error): ?>
+          <div class="alert alert-danger" role="alert">
+            <?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?>
+          </div>
+        <?php endif; ?>
 
-  <button type="submit">ログイン</button>
-</form>
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">ユーザー名</label>
+            <input type="text" name="username" class="form-control form-control-lg" required>
+          </div>
 
-<p><a href="register.php">新規登録はこちら</a></p>
+          <div class="mb-3">
+            <label class="form-label">パスワード</label>
+            <input type="password" name="password" class="form-control form-control-lg" required>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">ログイン</button>
+            <a class="btn btn-outline-secondary" href="register.php">新規登録はこちら</a>
+            <a class="btn btn-link" href="forgot_password.php">パスワードを忘れた場合</a>
+</div>
+
+        </form>
+
+      </div>
+    </div>
+
+    <p class="text-center muted mt-3 mb-0">© SafeHome</p>
+  </div>
+</main>
 
 </body>
 </html>

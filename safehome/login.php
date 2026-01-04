@@ -1,6 +1,7 @@
 <?php
 session_start();
 ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/connect_db.php';
@@ -16,27 +17,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $stmt = $pdo->prepare(
-<<<<<<< HEAD
                 "SELECT id, username, password_hash FROM users WHERE username = :u"
-=======
-                "SELECT id, username, password_hash AS password FROM users WHERE username = :u"
-
->>>>>>> origin/main
             );
             $stmt->execute([':u' => $username]);
-            $user = $stmt->fetch();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!password_verify($password, $user['password_hash'])) {
+            // ユーザーが存在しない or パスワード不一致
+            if (!$user || !password_verify($password, $user['password_hash'])) {
                 $error = 'ユーザー名またはパスワードが違います';
             } else {
                 session_regenerate_id(true);
-                  $_SESSION = [];
-                  $_SESSION['user_id'] = (int)$user['id'];
-                  $_SESSION['username'] = $user['username'];
-                  unset($_SESSION['group_id']);   // ★リセット
-  
-                  header('Location: group_select.php');
-                  exit;
+                $_SESSION = [];
+                $_SESSION['user_id'] = (int)$user['id'];
+                $_SESSION['username'] = $user['username'];
+                unset($_SESSION['group_id']); // リセット
+
+                header('Location: group_select.php');
+                exit;
             }
         } catch (PDOException $e) {
             $error = 'DBエラー: ' . $e->getMessage();
@@ -98,8 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn btn-primary btn-lg">ログイン</button>
             <a class="btn btn-outline-secondary" href="register.php">新規登録はこちら</a>
             <a class="btn btn-link" href="forgot_password.php">パスワードを忘れた場合</a>
-</div>
-
+          </div>
         </form>
 
       </div>

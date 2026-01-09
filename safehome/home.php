@@ -261,6 +261,15 @@ $members = $stmt->fetchAll();
     </div>
   </div>
 
+  <form method="POST" action="leave_group.php"
+      onsubmit="return confirm('このグループから退会しますか？');">
+  <input type="hidden" name="group_id" value="<?= (int)($_SESSION['group_id'] ?? 0) ?>">
+  <button type="submit">グループ退会</button>
+</form>
+
+
+
+
   <p class="text-center muted mt-4 mb-0">© SafeHome</p>
 </main>
 

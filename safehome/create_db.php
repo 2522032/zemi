@@ -78,6 +78,22 @@ try {
         ON group_events(group_id, start_at);
     ");
 
+    $pdo->exec("
+  CREATE TABLE IF NOT EXISTS password_reset_codes (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    code_hash TEXT NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used_at TIMESTAMP
+  );
+");
+
+$pdo->exec("
+  CREATE INDEX IF NOT EXISTS idx_reset_user_expires
+  ON password_reset_codes(user_id, expires_at DESC);
+");
+
+
     $pdo->commit();
     echo "OK: テーブル作成完了";
 } catch (PDOException $e) {

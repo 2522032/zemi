@@ -1,5 +1,46 @@
 <?php
 session_start();
+require_once __DIR__ . '/connect_db.php';
+
+$error = '';
+$code_to_show = '';
+
+function generate_reset_code(): string {
+  return strval(random_int(100000, 999999));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $username = trim($_POST['username'] ?? '');
+
+  if ($username === '') {
+    $error = 'ユーザー名を入力してください';
+  } else {
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = :u");
+    $stmt->execute([':u' => $username]);
+    $user_id = $stmt->fetchColumn();
+
+    if (!$user_id) {
+      $error = 'そのユーザー名は存在しません';
+    } else {
+      $code = generate_reset_code();
+      $code_hash = password_hash($code, PASSWORD_DEFAULT);
+
+      $stmt = $pdo->prepare("
+        INSERT INTO password_reset_codes (user_id, code_hash, expires_at)
+        VALUES (:uid, :ch, NOW() + INTERVAL '10 minutes')
+      ");
+      $stmt->execute([
+        ':uid' => (int)$user_id,
+        ':ch'  => $code_hash
+      ]);
+
+      $code_to_show = $code;
+
+      $_SESSION['reset_username'] = $username;
+    }
+  }
+}
+
 ?>
 <!doctype html>
 <html lang="ja">
@@ -35,6 +76,24 @@ session_start();
     <span class="navbar-brand brand">SafeHome</span>
   </div>
 </nav>
+
+<?php if ($error): ?>
+  <div class="alert alert-danger"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
+<?php endif; ?>
+
+<?php if ($code_to_show): ?>
+  <div class="alert alert-success">
+    再設定コード： <strong class="fs-4"><?php echo htmlspecialchars($code_to_show, ENT_QUOTES, 'UTF-8'); ?></strong><br>
+    このコードを使って、次の画面でパスワードを再設定してください（10分有効）。
+  </div>
+  <a class="btn btn-primary w-100" href="reset_password.php">パスワード再設定へ</a>
+<?php else: ?>
+  <form method="post">
+    <label class="form-label">ユーザー名</label>
+    <input class="form-control mb-3" name="username" required>
+    <button class="btn btn-primary w-100">再設定コードを発行</button>
+  </form>
+<?php endif; ?>
 
 <main class="container py-5">
   <div class="mx-auto app-card">

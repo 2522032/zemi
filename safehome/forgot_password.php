@@ -1,5 +1,8 @@
 <?php
 session_start();
+ini_set('display_errors','1');
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/connect_db.php';
 
 $error = '';
@@ -35,95 +38,290 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ]);
 
       $code_to_show = $code;
-
       $_SESSION['reset_username'] = $username;
     }
   }
 }
 
+function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 ?>
 <!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>パスワードを忘れた場合</title>
+  <title>パスワード再設定コード | SafeHome</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <style>
-    body{
-      min-height: 100vh;
-      background: radial-gradient(1200px 500px at 50% -50px, rgba(255,255,255,.9), rgba(255,255,255,0)),
-                  linear-gradient(180deg, #cfeeff 0%, #f7fbff 60%, #ffffff 100%);
+    :root{
+      --bg1:#0b1220;
+      --bg2:#0f2447;
+      --card: rgba(255,255,255,.10);
+      --card2: rgba(255,255,255,.14);
+      --stroke: rgba(255,255,255,.18);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --primary1:#6d5efc;
+      --primary2:#2ec5ff;
+      --danger1:#ff4d6d;
+      --ok1:#2fe7a6;
+      --warn1:#ffd166;
     }
-    .app-card{ max-width: 520px; }
-    .brand{ font-weight: 800; letter-spacing: .02em; }
-    .muted{ color:#6c757d; font-size:.95rem; }
 
-    .glass{
-      background: rgba(255,255,255,.72);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,.55);
-      box-shadow: 0 10px 30px rgba(20,50,80,.12);
+    body{
+      min-height:100vh;
+      color: var(--text);
+      background:
+        radial-gradient(900px 600px at 10% 10%, rgba(109,94,252,.45), transparent 60%),
+        radial-gradient(900px 600px at 90% 20%, rgba(46,197,255,.35), transparent 55%),
+        radial-gradient(900px 600px at 50% 110%, rgba(47,231,166,.18), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
     }
+    body:before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 0);
+      background-size: 28px 28px;
+      opacity:.35;
+      pointer-events:none;
+    }
+
+    .topbar{
+      position:sticky; top:0;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(11,18,32,.35);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      z-index:10;
+    }
+    .brand{
+      display:flex; align-items:center; gap:.75rem;
+      font-weight:800; letter-spacing:.02em;
+    }
+    .brand-badge{
+      width:38px; height:38px; border-radius:12px;
+      display:grid; place-items:center;
+      background: linear-gradient(135deg, var(--primary1), var(--primary2));
+      box-shadow: 0 10px 30px rgba(46,197,255,.18);
+    }
+    .brand small{
+      display:block; color: var(--muted); font-weight:600; letter-spacing:0;
+    }
+
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 44px 16px 24px; }
+
+    .card-glass{
+      border-radius: 22px;
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border: 1px solid var(--stroke);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .card-body{ padding: 30px; }
+
+    .title{ font-weight: 950; margin: 0; font-size: 1.35rem; }
+    .subtitle{ margin:.35rem 0 0; color: var(--muted); font-size:.98rem; }
+
+    .form-label{ color: rgba(255,255,255,.85); font-weight: 850; margin-bottom: .4rem; }
+    .form-control{
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--text);
+    }
+    .form-control:focus{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(46,197,255,.55);
+      box-shadow: 0 0 0 .25rem rgba(46,197,255,.18);
+      color: var(--text);
+    }
+
+    .btn-primary{
+      border:0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary1), var(--primary2));
+      box-shadow: 0 14px 28px rgba(109,94,252,.18);
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    .btn-primary:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(109,94,252,.22);
+      filter: brightness(1.04);
+    }
+    .btn-ghost{
+      border-radius: 14px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.16);
+      color: rgba(255,255,255,.88);
+      font-weight: 850;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:.4rem;
+    }
+    .btn-ghost:hover{ background: rgba(255,255,255,.10); color: rgba(255,255,255,.95); }
+
+    .alert-app{
+      border-radius: 14px;
+      padding: 12px 14px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      margin-top: 14px;
+    }
+    .alert-app .bar{
+      width: 6px; border-radius: 99px;
+      flex: 0 0 auto;
+      height: 100%;
+      margin-top: 2px;
+    }
+    .alert-danger-app{
+      border: 1px solid rgba(255,77,109,.35);
+      background: rgba(255,77,109,.12);
+    }
+    .alert-danger-app .bar{
+      background: linear-gradient(180deg, var(--danger1), rgba(255,77,109,.35));
+    }
+    .alert-ok-app{
+      border: 1px solid rgba(47,231,166,.30);
+      background: rgba(47,231,166,.12);
+    }
+    .alert-ok-app .bar{
+      background: linear-gradient(180deg, var(--ok1), rgba(47,231,166,.30));
+    }
+
+    .codebox{
+      margin-top: 10px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.16);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 1.4rem;
+      letter-spacing: .15em;
+      font-weight: 950;
+    }
+    .hint{ color: rgba(255,255,255,.62); font-size: .9rem; margin-top: .35rem; }
+    .footer{ color: rgba(255,255,255,.55); text-align:center; margin-top: 14px; font-size:.9rem; }
   </style>
 </head>
+
 <body>
-
-<nav class="navbar bg-white border-bottom">
-  <div class="container">
-    <span class="navbar-brand brand">SafeHome</span>
-  </div>
-</nav>
-
-<?php if ($error): ?>
-  <div class="alert alert-danger"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
-<?php endif; ?>
-
-<?php if ($code_to_show): ?>
-  <div class="alert alert-success">
-    再設定コード： <strong class="fs-4"><?php echo htmlspecialchars($code_to_show, ENT_QUOTES, 'UTF-8'); ?></strong><br>
-    このコードを使って、次の画面でパスワードを再設定してください（10分有効）。
-  </div>
-  <a class="btn btn-primary w-100" href="reset_password.php">パスワード再設定へ</a>
-<?php else: ?>
-  <form method="post">
-    <label class="form-label">ユーザー名</label>
-    <input class="form-control mb-3" name="username" required>
-    <button class="btn btn-primary w-100">再設定コードを発行</button>
-  </form>
-<?php endif; ?>
-
-<main class="container py-5">
-  <div class="mx-auto app-card">
-
-    <div class="card glass border-0 rounded-4">
-      <div class="card-body p-4 p-md-5 text-center">
-
-        <h1 class="h4 mb-3">パスワードを忘れた場合</h1>
-
-        <p class="muted mb-4">
-          現在この機能は準備中です。<br>
-          今後、メールによる再設定機能を追加予定です。
-        </p>
-
-        <div class="alert alert-info">
-          開発中のため、もうしばらくお待ちください。
+  <nav class="topbar">
+    <div class="container py-3 d-flex align-items-center justify-content-between">
+      <div class="brand">
+        <div class="brand-badge"><i class="bi bi-shield-lock"></i></div>
+        <div>
+          SafeHome
+          <small>パスワード再設定</small>
         </div>
+      </div>
 
-        <div class="d-grid gap-2 mt-4">
-          <a class="btn btn-primary btn-lg" href="login.php">
-            ログイン画面に戻る
-          </a>
-        </div>
-
+      <div class="d-flex gap-2">
+        <a class="btn btn-ghost btn-sm" href="login.php">
+          <i class="bi bi-box-arrow-in-right"></i> ログイン
+        </a>
       </div>
     </div>
+  </nav>
 
-    <p class="text-center muted mt-3 mb-0">© SafeHome</p>
-  </div>
-</main>
+  <main class="wrap">
+    <section class="card-glass mx-auto" style="max-width:720px;">
+      <div class="card-body">
+        <h1 class="title">パスワード再設定コードを発行</h1>
+        <p class="subtitle">ユーザー名を入力すると、10分間有効なコードを発行します。</p>
 
+        <?php if ($error): ?>
+          <div class="alert-app alert-danger-app" role="alert">
+            <div class="bar"></div>
+            <div>
+              <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle me-1"></i> エラー</div>
+              <div><?= h($error) ?></div>
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <?php if ($code_to_show): ?>
+          <div class="alert-app alert-ok-app" role="alert">
+            <div class="bar"></div>
+            <div style="flex:1;">
+              <div class="fw-bold mb-1"><i class="bi bi-check-circle me-1"></i> コードを発行しました</div>
+              <div class="hint">このコードを次の画面で入力してください（10分有効）。</div>
+
+              <div class="codebox">
+                <div>
+                  <div class="hint mb-1">再設定コード</div>
+                  <div class="code"><?= h($code_to_show) ?></div>
+                </div>
+                <button class="btn btn-ghost" type="button" id="copyBtn">
+                  <i class="bi bi-clipboard"></i> コピー
+                </button>
+              </div>
+
+              <div class="d-grid gap-2 mt-4">
+                <a class="btn btn-primary btn-lg" href="reset_password.php">
+                  <i class="bi bi-arrow-right-circle me-1"></i> パスワード再設定へ
+                </a>
+                <a class="btn btn-ghost btn-lg" href="login.php">
+                  <i class="bi bi-arrow-left me-1"></i> ログインへ戻る
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            const btn = document.getElementById('copyBtn');
+            btn?.addEventListener('click', async () => {
+              try {
+                await navigator.clipboard.writeText("<?= h($code_to_show) ?>");
+                btn.innerHTML = '<i class="bi bi-check2"></i> コピー済み';
+                setTimeout(() => btn.innerHTML = '<i class="bi bi-clipboard"></i> コピー', 1400);
+              } catch (e) {
+                alert('コピーできませんでした。手動でコピーしてください。');
+              }
+            });
+          </script>
+
+        <?php else: ?>
+          <form method="post" class="mt-4">
+            <div class="mb-3">
+              <label class="form-label">ユーザー名</label>
+              <input class="form-control form-control-lg" name="username" required maxlength="50"
+                     placeholder="例：test / shunya22 など">
+              <div class="hint">登録したユーザー名を入力してください。</div>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+              <button class="btn btn-primary btn-lg" type="submit">
+                <i class="bi bi-key me-1"></i> 再設定コードを発行
+              </button>
+              <a class="btn btn-ghost btn-lg" href="login.php">
+                <i class="bi bi-arrow-left me-1"></i> ログインへ戻る
+              </a>
+            </div>
+          </form>
+        <?php endif; ?>
+
+        <div class="footer">© SafeHome</div>
+      </div>
+    </section>
+  </main>
 </body>
 </html>
